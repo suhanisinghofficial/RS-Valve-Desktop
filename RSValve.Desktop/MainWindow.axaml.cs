@@ -9,10 +9,6 @@ namespace RSValve.Desktop;
 
 public partial class MainWindow : Window
 {
-    private static readonly SolidColorBrush StatusStartingBrush = new(Color.Parse("#94a3b8"));
-    private static readonly SolidColorBrush StatusConnectedBrush = new(Color.Parse("#22c55e"));
-    private static readonly SolidColorBrush StatusFailureBrush = new(Color.Parse("#ef4444"));
-
     private string? _updateDownloadUrl;
     private VideosWindow? _videosWindow;
 
@@ -27,7 +23,7 @@ public partial class MainWindow : Window
         VersionBlock.Text = $"v{AppVersionInfo.Current}";
         CopyrightBlock.Text = $"All rights reserved © {DateTime.Now.Year}";
 
-        SetConnectionStatus("Starting…", StatusStartingBrush, showError: false);
+        SetConnectionStatus("Starting…", AppColors.StatusStarting, showError: false);
         StartupErrorBorder.IsVisible = false;
 
         Topmost = true;
@@ -68,7 +64,7 @@ public partial class MainWindow : Window
     private async void OnRetryConnectionClick(object? sender, RoutedEventArgs e)
     {
         RetryConnectionButton.IsEnabled = false;
-        SetConnectionStatus("Retrying…", StatusStartingBrush, showError: false);
+        SetConnectionStatus("Retrying…", AppColors.StatusStarting, showError: false);
 
         await App.RetryConnectionAsync();
 
@@ -82,19 +78,19 @@ public partial class MainWindow : Window
 
         if (App.MediaServerError != null)
         {
-            SetConnectionStatus("Failure", StatusFailureBrush, showError: true, App.MediaServerError.Message);
+            SetConnectionStatus("Failure", AppColors.StatusFailure, showError: true, App.MediaServerError.Message);
             return;
         }
 
         if (App.IsConnected)
         {
-            SetConnectionStatus("Connected", StatusConnectedBrush, showError: false);
+            SetConnectionStatus("Connected", AppColors.StatusConnected, showError: false);
             return;
         }
 
         SetConnectionStatus(
             "Failure",
-            StatusFailureBrush,
+            AppColors.StatusFailure,
             showError: true,
             App.ConnectionError ?? "Could not connect to the server. Check Settings.");
     }

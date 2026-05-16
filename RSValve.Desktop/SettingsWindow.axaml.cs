@@ -9,11 +9,6 @@ namespace RSValve.Desktop;
 
 public partial class SettingsWindow : Window
 {
-    private static readonly SolidColorBrush MessageSuccessBrush = new(Color.Parse("#1b7f3b"));
-    private static readonly SolidColorBrush MessageErrorBrush = new(Color.Parse("#b91c1c"));
-    private static readonly SolidColorBrush MessageSuccessBg = new(Color.Parse("#f0fdf4"));
-    private static readonly SolidColorBrush MessageErrorBg = new(Color.Parse("#fef2f2"));
-
     private AppSettings? _editingSettings;
 
     public bool SavedSuccessfully { get; private set; }
@@ -38,19 +33,12 @@ public partial class SettingsWindow : Window
 
     private async void OnSaveClick(object? sender, RoutedEventArgs e)
     {
-        var settings = new AppSettings
-        {
-            MainUrl = MainUrlBox.Text?.Trim() ?? "",
-            Lobby = LobbyBox.Text?.Trim() ?? "",
-            Token = string.IsNullOrEmpty(TokenBox.Text)
-                ? (_editingSettings?.Token ?? "")
-                : TokenBox.Text
-        };
+        var settings = ReadSettingsFromForm();
 
         var validationError = SettingsValidator.Validate(settings);
         if (validationError != null)
         {
-            ShowMessage(validationError, MessageErrorBrush, MessageErrorBg, "#fecaca");
+            ShowMessage(validationError, isError: true);
             return;
         }
 
@@ -64,21 +52,28 @@ public partial class SettingsWindow : Window
         if (result.Success)
         {
             SavedSuccessfully = true;
-            ShowMessage("Saved and connected successfully.", MessageSuccessBrush, MessageSuccessBg, "#bbf7d0");
+            ShowMessage("Saved and connected successfully.", isError: false);
             await Task.Delay(600);
             Close();
             return;
         }
 
-        ShowMessage(result.ErrorMessage ?? "Connection failed.", MessageErrorBrush, MessageErrorBg, "#fecaca");
+        ShowMessage(result.ErrorMessage ?? "Connection failed.", isError: true);
     }
 
-    private void ShowMessage(string text, IBrush foreground, IBrush background, string borderColor)
+    private AppSettings ReadSettingsFromForm() => new()
+    {
+        MainUrl = MainUrlBox.Text?.Trim() ?? "",
+        Lobby = LobbyBox.Text?.Trim() ?? "",
+        Token = string.IsNullOrEmpty(TokenBox.Text) ? (_editingSettings?.Token ?? "") : TokenBox.Text
+    };
+
+    private void ShowMessage(string text, bool isError)
     {
         SettingsMessageBlock.Text = text;
-        SettingsMessageBlock.Foreground = foreground;
-        SettingsMessageBorder.Background = background;
-        SettingsMessageBorder.BorderBrush = new SolidColorBrush(Color.Parse(borderColor));
+        SettingsMessageBlock.Foreground = isError ? AppColors.MessageError : AppColors.MessageSuccess;
+        SettingsMessageBorder.Background = isError ? AppColors.MessageErrorBg : AppColors.MessageSuccessBg;
+        SettingsMessageBorder.BorderBrush = AppColors.Hex(isError ? "#fecaca" : "#bbf7d0");
         SettingsMessageBorder.BorderThickness = new Thickness(1);
         SettingsMessageBorder.IsVisible = true;
     }

@@ -5,12 +5,13 @@ namespace RSValve.Desktop;
 
 internal static class Program
 {
+    private const uint MbIconError = 0x10;
+
     [STAThread]
     public static void Main(string[] args)
     {
         try
         {
-            Services.StartupLog.Write("Starting application…");
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
         catch (Exception ex)
@@ -18,7 +19,7 @@ internal static class Program
             Services.StartupLog.Write(ex);
             ShowFatalError(
                 "RS VALVE APPLICATION could not start.",
-                $"{ex.Message}{Environment.NewLine}{Environment.NewLine}Details were saved to:{Environment.NewLine}{Services.StartupLog.LogPath}");
+                $"{ex.Message}{Environment.NewLine}{Environment.NewLine}Log: {Services.StartupLog.LogPath}");
             Environment.Exit(1);
         }
     }
@@ -33,7 +34,7 @@ internal static class Program
     {
         if (OperatingSystem.IsWindows())
         {
-            MessageBoxW(IntPtr.Zero, message, title, 0x10); // MB_ICONERROR
+            MessageBoxW(IntPtr.Zero, message, title, MbIconError);
             return;
         }
 

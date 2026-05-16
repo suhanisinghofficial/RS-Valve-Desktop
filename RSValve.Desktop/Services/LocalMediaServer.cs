@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Sockets;
-using RSValve.Desktop;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -42,15 +41,9 @@ public sealed class LocalMediaServer
             await next();
         });
 
-        app.MapGet("/", () => Results.Text(
-            $"{AppConstants.ApplicationName} — local media. Try GET /videos",
-            "text/plain; charset=utf-8"));
-
         app.MapGet("/videos", ListVideos);
         app.MapGet("/api/videos", ListVideos);
-
         app.MapGet("/media/{id}", ServeMedia);
-        app.MapGet("/player/{id}", ServePlayerPage);
 
         _app = app;
         await _app.StartAsync(cancellationToken);
@@ -72,40 +65,6 @@ public sealed class LocalMediaServer
         if (string.IsNullOrEmpty(path) || !File.Exists(path))
             return Results.NotFound();
         return Results.File(path, contentType: "video/mp4", enableRangeProcessing: true);
-    }
-
-    private IResult ServePlayerPage(string id)
-    {
-        var path = _library.TryGetStoredPath(id);
-        if (string.IsNullOrEmpty(path) || !File.Exists(path))
-            return Results.NotFound();
-
-        var title = _library.GetAll().FirstOrDefault(v => v.Id == id)?.DisplayName ?? "Video";
-        var encodedTitle = WebUtility.HtmlEncode(title);
-        var html = $$"""
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-              <meta charset="utf-8" />
-              <meta name="viewport" content="width=device-width, initial-scale=1" />
-              <title>{{encodedTitle}}</title>
-              <style>
-                * { margin: 0; box-sizing: border-box; }
-                html, body { height: 100%; background: #0f172a; color: #e2e8f0; font-family: system-ui, sans-serif; }
-                .wrap { display: flex; flex-direction: column; height: 100%; }
-                header { padding: 10px 14px; background: #1e293b; font-size: 14px; font-weight: 600; border-bottom: 1px solid #334155; }
-                video { flex: 1; width: 100%; background: #000; object-fit: contain; }
-              </style>
-            </head>
-            <body>
-              <div class="wrap">
-                <header>{{encodedTitle}}</header>
-                <video src="/media/{{WebUtility.HtmlEncode(id)}}" controls autoplay playsinline></video>
-              </div>
-            </body>
-            </html>
-            """;
-        return Results.Content(html, "text/html; charset=utf-8");
     }
 
     private IResult ListVideos()

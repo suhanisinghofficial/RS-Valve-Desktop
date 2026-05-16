@@ -10,11 +10,8 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <!-- Reliable Windows publish (single-file often fails silently with Avalonia + ASP.NET) -->
     <PublishSingleFile Condition="'$(RuntimeIdentifier)' == 'win-x64'">false</PublishSingleFile>
     <SelfContained Condition="'$(RuntimeIdentifier)' == 'win-x64'">true</SelfContained>
-    <IncludeNativeLibrariesForSelfExtract Condition="'$(RuntimeIdentifier)' == 'win-x64'">true</IncludeNativeLibrariesForSelfExtract>
-    <EnableCompressionInSingleFile>false</EnableCompressionInSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
 

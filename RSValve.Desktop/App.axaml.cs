@@ -22,37 +22,28 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        try
+        Library = new VideoLibraryService();
+        Library.Initialize();
+
+        SettingsService = new AppSettingsService();
+        RegistrationService = new LobbyRegistrationService();
+        UpdateChecker = new UpdateCheckService();
+        MediaServer = new LocalMediaServer(Library);
+
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            Library = new VideoLibraryService();
-            Library.Initialize();
-
-            SettingsService = new AppSettingsService();
-            RegistrationService = new LobbyRegistrationService();
-            UpdateChecker = new UpdateCheckService();
-            MediaServer = new LocalMediaServer(Library);
-
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            var window = new MainWindow();
+            desktop.MainWindow = window;
+            window.Show();
+            window.Activate();
+            desktop.Exit += (_, _) =>
             {
-                var window = new MainWindow();
-                desktop.MainWindow = window;
-                window.Show();
-                window.Activate();
-                desktop.Exit += (_, _) =>
-                {
-                    if (_servicesStarted)
-                        MediaServer.StopAsync().GetAwaiter().GetResult();
-                };
-            }
+                if (_servicesStarted)
+                    MediaServer.StopAsync().GetAwaiter().GetResult();
+            };
+        }
 
-            StartupLog.Write("UI initialized.");
-            base.OnFrameworkInitializationCompleted();
-        }
-        catch (Exception ex)
-        {
-            StartupLog.Write(ex);
-            throw;
-        }
+        base.OnFrameworkInitializationCompleted();
     }
 
     public static async Task StartServicesAsync()
@@ -67,8 +58,7 @@ public partial class App : Application
             {
                 await MediaServer.StartAsync();
                 var settings = SettingsService.Load();
-                var reg = await RegistrationService.RegisterAsync(settings, MediaServer.VideoListUrl);
-                ApplyRegistrationResult(reg);
+                ApplyRegistrationResult(await RegistrationService.RegisterAsync(settings, MediaServer.VideoListUrl));
             }
             catch (Exception ex)
             {
@@ -87,13 +77,10 @@ public partial class App : Application
 
     public static async Task<RegistrationResult> SaveSettingsAndRegisterAsync(AppSettings settings)
     {
-        if (!_servicesStarted || MediaServerError != null)
-        {
-            if (MediaServerError != null)
-                return RegistrationResult.Fail(MediaServerError.Message);
-
+        if (!_servicesStarted)
             await StartServicesAsync();
-        }
+        else if (MediaServerError != null)
+            return RegistrationResult.Fail(MediaServerError.Message);
 
         if (MediaServerError != null)
             return RegistrationResult.Fail(MediaServerError.Message);
@@ -118,8 +105,7 @@ public partial class App : Application
                 await MediaServer.StartAsync();
 
             var settings = SettingsService.Load();
-            var result = await RegistrationService.RegisterAsync(settings, MediaServer.VideoListUrl);
-            ApplyRegistrationResult(result);
+            ApplyRegistrationResult(await RegistrationService.RegisterAsync(settings, MediaServer.VideoListUrl));
         }
         catch (Exception ex)
         {

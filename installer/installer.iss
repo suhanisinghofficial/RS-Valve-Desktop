@@ -1,6 +1,3 @@
-; Inno Setup — RS VALVE desktop app (Windows x64)
-; CI: publish\app\  →  installer output: publish\RS-Valve-Setup.exe
-
 #ifndef AppVersion
   #define AppVersion "1.0.0"
 #endif
