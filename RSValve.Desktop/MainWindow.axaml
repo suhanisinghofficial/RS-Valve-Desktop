@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="RSValve.Desktop.MainWindow"
         Title="RS VALVE APPLICATION"
+        Icon="/Assets/logo.ico"
         Width="440"
         Height="480"
         MinWidth="400"
@@ -208,6 +209,43 @@
                         </Grid>
                     </Border>
                 </Grid>
+
+                <Border x:Name="LobbyInfoBorder"
+                        Background="#f0fdf4"
+                        BorderBrush="#bbf7d0"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        Padding="14,14"
+                        IsVisible="False">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <Border Grid.Column="0"
+                                Width="40"
+                                Height="40"
+                                CornerRadius="20"
+                                Background="#dcfce7"
+                                VerticalAlignment="Center"
+                                Margin="0,0,12,0">
+                            <TextBlock Text="L"
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       Foreground="#15803d"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Spacing="4">
+                            <TextBlock Text="Lobby"
+                                       FontSize="11"
+                                       Foreground="{StaticResource InkMutedBrush}" />
+                            <TextBlock x:Name="LobbyBlock"
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       Foreground="#15803d"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
 
                 <Border x:Name="StartupErrorBorder"
                         Background="#fef2f2"

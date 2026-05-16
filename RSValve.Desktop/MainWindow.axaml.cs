@@ -15,6 +15,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        WindowIconHelper.Apply(this);
         Loaded += OnLoaded;
     }
 
@@ -25,6 +26,7 @@ public partial class MainWindow : Window
 
         SetConnectionStatus("Starting…", AppColors.StatusStarting, showError: false);
         StartupErrorBorder.IsVisible = false;
+        LobbyInfoBorder.IsVisible = false;
 
         Topmost = true;
         Activate();
@@ -79,12 +81,14 @@ public partial class MainWindow : Window
         if (App.MediaServerError != null)
         {
             SetConnectionStatus("Failure", AppColors.StatusFailure, showError: true, App.MediaServerError.Message);
+            UpdateLobbyDisplay(show: false);
             return;
         }
 
         if (App.IsConnected)
         {
             SetConnectionStatus("Connected", AppColors.StatusConnected, showError: false);
+            UpdateLobbyDisplay(show: true);
             return;
         }
 
@@ -93,6 +97,16 @@ public partial class MainWindow : Window
             AppColors.StatusFailure,
             showError: true,
             App.ConnectionError ?? "Could not connect to the server. Check Settings.");
+        UpdateLobbyDisplay(show: false);
+    }
+
+    private void UpdateLobbyDisplay(bool show)
+    {
+        LobbyInfoBorder.IsVisible = show;
+        if (!show) return;
+
+        var lobby = App.SettingsService.Load().Lobby;
+        LobbyBlock.Text = string.IsNullOrWhiteSpace(lobby) ? "—" : lobby.Trim();
     }
 
     private void SetConnectionStatus(string text, IBrush dotBrush, bool showError, string? errorMessage = null)

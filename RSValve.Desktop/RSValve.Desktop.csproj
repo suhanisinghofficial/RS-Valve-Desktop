@@ -7,6 +7,7 @@
     <RootNamespace>RSValve.Desktop</RootNamespace>
     <AssemblyName>RSValve</AssemblyName>
     <ApplicationTitle>RS VALVE APPLICATION</ApplicationTitle>
+    <ApplicationIcon>Assets\logo.ico</ApplicationIcon>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>

@@ -5,10 +5,12 @@
 #define AppName "RS VALVE APPLICATION"
 #define AppShortName "RS Valve"
 #define AppExe "RS-Valve.exe"
+#define AppIcon "..\RSValve.Desktop\Assets\logo.ico"
 #define SourceDir "..\publish\app"
 #define OutputDir "..\publish"
 
 [Setup]
+SetupIconFile={#AppIcon}
 AppId={{A7B3C9E1-RSVALVE-DESKTOP-2026}}
 AppName={#AppName}
 AppVersion={#AppVersion}
@@ -36,9 +38,9 @@ Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"
+Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"; IconFilename: "{#AppIcon}"
 Name: "{group}\Uninstall {#AppName}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; IconFilename: "{#AppIcon}"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent

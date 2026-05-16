@@ -12,6 +12,7 @@ publish/
 out/
 .vs/
 .idea/
+.venv-ico/
 *.DotSettings.user
 
 ## OS

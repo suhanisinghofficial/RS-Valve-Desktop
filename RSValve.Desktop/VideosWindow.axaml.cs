@@ -11,6 +11,7 @@ public partial class VideosWindow : Window
     public VideosWindow()
     {
         InitializeComponent();
+        WindowIconHelper.Apply(this);
         Loaded += (_, _) => RefreshList();
     }
 
