@@ -1,6 +1,6 @@
 # GitHub Actions — Windows build & installer
 
-Automated pipeline: **push to `main`** → Windows runner → `dotnet publish` → **Inno Setup** → **`RS-Valve-Setup.exe`** artifact.
+Automated pipeline: **push to `main`** → Windows runner → `dotnet publish` → **Inno Setup** → **`RS-Valve-Setup.exe`** artifact → **GitHub Release**.
 
 ## Folder structure
 
@@ -14,19 +14,9 @@ publish/                      # Build output (gitignored)
 
 ## One-time setup
 
-1. Create a GitHub repository and push this project:
-   ```bash
-   git init
-   git add .
-   git commit -m "Add RS Valve desktop app with CI"
-   git branch -M main
-   git remote add origin https://github.com/YOUR_ORG/YOUR_REPO.git
-   git push -u origin main
-   ```
-
+1. Create a GitHub repository and push this project.
 2. Ensure the default branch is **`main`** (workflow triggers on push to `main`).
-
-3. No secrets required for basic build/upload artifacts.
+3. No extra secrets required — `GITHUB_TOKEN` publishes releases automatically.
 
 ## How to trigger a build
 
@@ -37,23 +27,28 @@ publish/                      # Build output (gitignored)
 
 ## Where to download the installer
 
-1. Open your repo on GitHub.
-2. Go to **Actions** → select the latest successful run.
-3. Scroll to **Artifacts**.
-4. Download **`RS-Valve-Setup-v1.0.0`** (version matches `Directory.Build.props`).
-5. Unzip → run **`RS-Valve-Setup.exe`** on a Windows PC.
+**Option A — GitHub Release (recommended for users & in-app updates)**
 
-Artifacts are kept **90 days** (installer) / **14 days** (full publish folder).
+1. Open **Releases** on the repo.
+2. Download **`RS-Valve-Setup.exe`** from the latest release (tag `v1.0.0`, etc.).
 
-## What gets installed on Windows
+**Option B — Actions artifacts (build logs / short-term)**
 
-- **Location:** `C:\Program Files\RS Valve\`
-- **Executable:** `RS-Valve.exe`
-- **Start menu** shortcut
-- **Desktop** shortcut (optional during install)
-- **Uninstall** entry in Settings → Apps
+1. **Actions** → latest successful run → **Artifacts** → **`RS-Valve-Setup-v1.0.0`**.
 
-## How to update the app version
+Artifacts are kept **90 days** (installer) / **14 days** (full publish folder). Releases stay until you delete them.
+
+## In-app update checks
+
+The desktop app calls the **GitHub Releases API** (no custom server `update.json`):
+
+- Repo: `suhanisinghofficial/RS-Valve-Desktop`
+- Compares latest release tag (`v1.0.1`) to the installed version in `Directory.Build.props`
+- **Download update** opens the release asset **`RS-Valve-Setup.exe`** (or the release page)
+
+Each successful CI run on `main` publishes/updates the GitHub Release for that version.
+
+## How to ship a new version
 
 1. Edit **`Directory.Build.props`**:
    ```xml
@@ -63,12 +58,8 @@ Artifacts are kept **90 days** (installer) / **14 days** (full publish folder).
    <InformationalVersion>1.0.1</InformationalVersion>
    ```
 2. Commit and push to **`main`**.
-3. CI reads version automatically and passes it to Inno Setup.
-4. Download the new artifact from Actions.
-
-Also update your server **`update.json`** at  
-`https://rsvalve.tractioncontrolsbc.com/releases/window/update.json`  
-so in-app update checks match.
+3. CI builds the installer and creates/updates release **`v1.0.1`** with **`RS-Valve-Setup.exe`** attached.
+4. Installed apps on **1.0.0** will show the update banner after the release is live.
 
 ## Local build on Mac (app only)
 
@@ -86,10 +77,3 @@ dotnet publish RSValve.Desktop/RSValve.Desktop.csproj -c Release -r win-x64 --se
 ```
 
 Output: `publish\RS-Valve-Setup.exe`
-
-## Deploy to your update server
-
-After each release, upload to your server:
-
-- `releases/window/RS-Valve.exe` (or the installer)
-- `releases/window/update.json` with the new `version` and `file` name

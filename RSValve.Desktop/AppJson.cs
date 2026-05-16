@@ -6,7 +6,7 @@ internal static class AppJson
 {
     public static readonly JsonSerializerOptions Indented = new() { WriteIndented = true };
 
-    public static readonly JsonSerializerOptions Manifest = new()
+    public static readonly JsonSerializerOptions Api = new()
     {
         PropertyNameCaseInsensitive = true
     };

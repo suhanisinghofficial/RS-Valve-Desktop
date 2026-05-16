@@ -15,6 +15,14 @@ public static class AppVersionInfo
         }
     }
 
+    public static string NormalizeTag(string tag)
+    {
+        var cleaned = tag.Trim();
+        if (cleaned.Length > 1 && cleaned[0] is 'v' or 'V' && char.IsDigit(cleaned[1]))
+            cleaned = cleaned[1..];
+        return cleaned;
+    }
+
     public static bool IsRemoteNewer(string remoteVersion, string? currentVersion = null)
     {
         currentVersion ??= Current;
@@ -30,7 +38,7 @@ public static class AppVersionInfo
         version = new Version(0, 0);
         if (string.IsNullOrWhiteSpace(text)) return false;
 
-        var cleaned = text.Trim();
+        var cleaned = NormalizeTag(text);
         var plus = cleaned.IndexOf('+');
         if (plus > 0) cleaned = cleaned[..plus];
 

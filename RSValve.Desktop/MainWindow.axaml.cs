@@ -108,7 +108,7 @@ public partial class MainWindow : Window
 
     private async Task CheckForUpdatesAsync()
     {
-        var result = await App.UpdateChecker.CheckAsync(App.SettingsService.Load());
+        var result = await App.UpdateChecker.CheckAsync();
         ApplyUpdateCheckResult(result);
     }
 

@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Text.Json;
 using RSValve.Desktop.Models;
 
@@ -5,36 +6,68 @@ namespace RSValve.Desktop.Services;
 
 public sealed class UpdateCheckService
 {
-    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(10) };
+    private static readonly HttpClient Http = CreateClient();
 
-    public async Task<UpdateCheckResult> CheckAsync(AppSettings settings, CancellationToken ct = default)
+    public async Task<UpdateCheckResult> CheckAsync(CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(settings.MainUrl))
-            return UpdateCheckResult.UpToDate();
-
-        var baseUrl = settings.MainUrl.Trim().TrimEnd('/');
-        var manifestUrl = $"{baseUrl}/releases/window/update.json";
+        var url =
+            $"https://api.github.com/repos/{AppConstants.GitHubOwner}/{AppConstants.GitHubRepo}/releases/latest";
 
         try
         {
-            await using var stream = await Http.GetStreamAsync(manifestUrl, ct);
-            var manifest = await JsonSerializer.DeserializeAsync<UpdateManifest>(
-                stream,
-                AppJson.Manifest,
-                ct);
-
-            if (manifest == null || string.IsNullOrWhiteSpace(manifest.Version))
+            using var response = await Http.GetAsync(url, ct);
+            if (!response.IsSuccessStatusCode)
                 return UpdateCheckResult.UpToDate();
 
-            if (!AppVersionInfo.IsRemoteNewer(manifest.Version))
+            await using var stream = await response.Content.ReadAsStreamAsync(ct);
+            var release = await JsonSerializer.DeserializeAsync<GitHubRelease>(stream, AppJson.Api, ct);
+            if (release == null || string.IsNullOrWhiteSpace(release.TagName))
                 return UpdateCheckResult.UpToDate();
 
-            var file = string.IsNullOrWhiteSpace(manifest.File) ? "RS-VALVE.exe" : manifest.File.Trim();
-            return UpdateCheckResult.Available(manifest.Version.Trim(), $"{baseUrl}/releases/window/{file}");
+            var remoteVersion = release.TagName.Trim();
+            if (!AppVersionInfo.IsRemoteNewer(remoteVersion))
+                return UpdateCheckResult.UpToDate();
+
+            var downloadUrl = PickSetupDownloadUrl(release);
+            if (string.IsNullOrEmpty(downloadUrl))
+                downloadUrl = release.HtmlUrl;
+
+            return UpdateCheckResult.Available(
+                AppVersionInfo.NormalizeTag(remoteVersion),
+                downloadUrl);
         }
         catch
         {
             return UpdateCheckResult.UpToDate();
         }
+    }
+
+    private static string? PickSetupDownloadUrl(GitHubRelease release)
+    {
+        foreach (var asset in release.Assets)
+        {
+            if (string.Equals(asset.Name, AppConstants.GitHubSetupAssetName, StringComparison.OrdinalIgnoreCase))
+                return asset.BrowserDownloadUrl;
+        }
+
+        foreach (var asset in release.Assets)
+        {
+            var name = asset.Name;
+            if (name.Contains("Setup", StringComparison.OrdinalIgnoreCase) &&
+                name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                return asset.BrowserDownloadUrl;
+        }
+
+        return null;
+    }
+
+    private static HttpClient CreateClient()
+    {
+        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+        client.DefaultRequestHeaders.UserAgent.Add(
+            new ProductInfoHeaderValue("RS-Valve-Desktop", AppVersionInfo.Current));
+        client.DefaultRequestHeaders.Accept.Add(
+            new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
+        return client;
     }
 }

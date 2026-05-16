@@ -12,6 +12,9 @@ env:
   PUBLISH_APP_DIR: publish/app
   PROJECT: RSValve.Desktop/RSValve.Desktop.csproj
 
+permissions:
+  contents: write
+
 jobs:
   build-windows:
     name: Build and package (Windows)
@@ -103,3 +106,13 @@ jobs:
           name: RS-Valve-app-v${{ steps.version.outputs.version }}
           path: publish/app/
           retention-days: 14
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: RS VALVE v${{ steps.version.outputs.version }}
+          files: publish/RS-Valve-Setup.exe
+          generate_release_notes: true
+          make_latest: true
+          overwrite: true
