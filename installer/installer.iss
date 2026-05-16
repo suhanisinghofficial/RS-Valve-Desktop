@@ -28,7 +28,6 @@ PrivilegesRequired=admin
 WizardStyle=modern
 UninstallDisplayName={#AppName}
 UninstallDisplayIcon={app}\{#AppExe}
-SetupIconFile=
 DisableProgramGroupPage=no
 
 [Languages]

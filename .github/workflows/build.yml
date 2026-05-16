@@ -1,5 +1,4 @@
 # Builds RS-Valve for Windows (win-x64) and packages RS-Valve-Setup.exe with Inno Setup.
-# Runs on GitHub-hosted Windows runners — no local Windows machine required.
 
 name: Build Windows Installer
 
@@ -29,14 +28,16 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Read version from Directory.Build.props
+      - name: Read version
         id: version
         shell: pwsh
         run: |
-          $xml = [xml](Get-Content Directory.Build.props)
-          $version = $xml.Project.PropertyGroup.Version
+          [xml]$props = Get-Content -Path Directory.Build.props -Encoding UTF8
+          $pg = $props.Project.PropertyGroup
+          if ($pg -is [System.Array]) { $pg = $pg | Where-Object { $_.Version } | Select-Object -First 1 }
+          $version = $pg.Version
           if ([string]::IsNullOrWhiteSpace($version)) { throw "Version not found in Directory.Build.props" }
-          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
           Write-Host "Building version $version"
 
       - name: Restore
@@ -59,30 +60,33 @@ jobs:
           $dst = Join-Path "${{ env.PUBLISH_DIR }}" "RS-Valve.exe"
           if (-not (Test-Path $src)) {
             Write-Error "Publish did not produce RSValve.exe"
-            Get-ChildItem "${{ env.PUBLISH_DIR }}" -Filter *.exe
+            Get-ChildItem "${{ env.PUBLISH_DIR }}" -Filter *.exe | Format-Table Name, Length
             exit 1
           }
           if (Test-Path $dst) { Remove-Item $dst -Force }
-          Rename-Item $src $dst
-          Write-Host "OK: $dst ($((Get-Item $dst).Length) bytes)"
+          Rename-Item -Path $src -NewName "RS-Valve.exe"
+          Write-Host "OK: $dst"
 
       - name: Install Inno Setup 6
-        run: choco install innosetup -y --no-progress
+        uses: aminya/gh-action-inno-setup@v0.9.0
 
       - name: Compile installer
         shell: pwsh
         run: |
-          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
-          if (-not (Test-Path $iscc)) { $iscc = "$env:ProgramFiles\Inno Setup 6\ISCC.exe" }
-          if (-not (Test-Path $iscc)) { throw "ISCC.exe not found after Inno Setup install" }
-          & $iscc "installer\installer.iss" /DAppVersion="${{ steps.version.outputs.version }}"
+          $iss = Join-Path $PWD "installer\installer.iss"
+          if (-not (Test-Path $iss)) { throw "Missing $iss" }
+          ISCC.exe $iss /DAppVersion="${{ steps.version.outputs.version }}"
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup compile failed with exit code $LASTEXITCODE" }
 
       - name: Verify installer
         shell: pwsh
         run: |
-          $setup = "publish\RS-Valve-Setup.exe"
-          if (-not (Test-Path $setup)) { throw "Installer not found at $setup" }
-          Write-Host "Installer: $setup ($((Get-Item $setup).Length) bytes)"
+          $setup = Join-Path $PWD "publish\RS-Valve-Setup.exe"
+          if (-not (Test-Path $setup)) {
+            Get-ChildItem publish -Filter *.exe | Format-Table Name, Length
+            throw "Installer not found at $setup"
+          }
+          Write-Host "Installer OK: $setup ($((Get-Item $setup).Length) bytes)"
 
       - name: Upload RS-Valve-Setup.exe
         uses: actions/upload-artifact@v4
@@ -92,7 +96,7 @@ jobs:
           retention-days: 90
           if-no-files-found: error
 
-      - name: Upload publish folder (optional — full app)
+      - name: Upload publish folder
         uses: actions/upload-artifact@v4
         with:
           name: RS-Valve-win-x64-v${{ steps.version.outputs.version }}
