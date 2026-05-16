@@ -1,0 +1,19 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.dll
+*.pdb
+*.exe
+!**/Assets/**/*.dll
+publish/
+out/
+.vs/
+.idea/
+*.DotSettings.user
+
+## OS
+.DS_Store
+Thumbs.db

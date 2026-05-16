@@ -1,0 +1,217 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="using:RSValve.Desktop.Models"
+        x:Class="RSValve.Desktop.VideosWindow"
+        Title="Manage videos"
+        Width="680"
+        Height="540"
+        MinWidth="560"
+        MinHeight="420"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        CanResize="True"
+        RequestedThemeVariant="Light"
+        Background="{StaticResource PageBgBrush}">
+    <Border Margin="12"
+            Background="{StaticResource CardBrush}"
+            CornerRadius="14"
+            BoxShadow="0 12 32 0 #22000000"
+            ClipToBounds="True">
+        <DockPanel LastChildFill="True">
+            <Border DockPanel.Dock="Top"
+                    Background="{StaticResource PopupHeaderGradientBrush}"
+                    Padding="18,14">
+                <Grid ColumnDefinitions="Auto,*">
+                    <Border Grid.Column="0"
+                            Classes="header-icon"
+                            Margin="0,0,14,0"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="VID"
+                                   FontSize="13"
+                                   Foreground="#1d4ed8"
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Spacing="2">
+                        <TextBlock Text="Manage videos"
+                                   FontSize="18"
+                                   FontWeight="Bold"
+                                   Foreground="White" />
+                        <TextBlock Text="Add, rename, play, or remove MP4 files in your library"
+                                   FontSize="12"
+                                   Foreground="#bfdbfe"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border DockPanel.Dock="Bottom"
+                    Background="#f8fafc"
+                    BorderBrush="#e2e8f0"
+                    BorderThickness="0,1,0,0"
+                    Padding="14,12"
+                    CornerRadius="0,0,14,14">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock x:Name="VideoCountBlock"
+                               VerticalAlignment="Center"
+                               FontSize="12"
+                               Foreground="{StaticResource InkMutedBrush}" />
+                    <Button Grid.Column="1"
+                            x:Name="AddButton"
+                            Classes="accent"
+                            Content="+ Add New Video"
+                            Padding="18,10"
+                            Click="OnAddClick" />
+                </Grid>
+            </Border>
+
+            <Border Margin="14,12,14,0"
+                    CornerRadius="10"
+                    BorderBrush="#e2e8f0"
+                    BorderThickness="1"
+                    ClipToBounds="True">
+                <Grid RowDefinitions="Auto,*">
+                    <Border Grid.Row="0"
+                            Background="#f1f5f9"
+                            BorderBrush="#e2e8f0"
+                            BorderThickness="0,0,0,1"
+                            Padding="10,9">
+                        <Grid ColumnDefinitions="36,*,64,80,200">
+                            <TextBlock Grid.Column="0"
+                                       Text="#"
+                                       FontSize="11"
+                                       FontWeight="Bold"
+                                       Foreground="#475569"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="1"
+                                       Text="Video name"
+                                       FontSize="11"
+                                       FontWeight="Bold"
+                                       Foreground="#475569" />
+                            <TextBlock Grid.Column="2"
+                                       Text="Size"
+                                       FontSize="11"
+                                       FontWeight="Bold"
+                                       Foreground="#475569"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="3"
+                                       Text="Added"
+                                       FontSize="11"
+                                       FontWeight="Bold"
+                                       Foreground="#475569"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="4"
+                                       Text="Actions"
+                                       FontSize="11"
+                                       FontWeight="Bold"
+                                       Foreground="#475569"
+                                       HorizontalAlignment="Center" />
+                        </Grid>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="1"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <Grid MinHeight="200">
+                            <ItemsControl x:Name="VideoTable">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="models:LibraryEntryRow">
+                                        <Border Background="White"
+                                                BorderBrush="#e2e8f0"
+                                                BorderThickness="0,0,0,1"
+                                                Padding="8,7">
+                                            <Grid ColumnDefinitions="36,*,64,80,200">
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{Binding SerialNumber}"
+                                                           FontSize="12"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="#64748b"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding Entry.DisplayName}"
+                                                           FontSize="13"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{StaticResource InkBrush}"
+                                                           VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Margin="0,0,8,0" />
+                                                <TextBlock Grid.Column="2"
+                                                           Text="{Binding FileSizeText}"
+                                                           FontSize="10"
+                                                           Foreground="{StaticResource InkMutedBrush}"
+                                                           VerticalAlignment="Center"
+                                                           HorizontalAlignment="Center" />
+                                                <TextBlock Grid.Column="3"
+                                                           Text="{Binding Entry.AddedUtc, StringFormat='{}{0:dd MMM yyyy}'}"
+                                                           FontSize="11"
+                                                           Foreground="{StaticResource InkMutedBrush}"
+                                                           VerticalAlignment="Center"
+                                                           HorizontalAlignment="Center" />
+                                                <StackPanel Grid.Column="4"
+                                                            Orientation="Horizontal"
+                                                            Spacing="4"
+                                                            HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center">
+                                                    <Button Classes="btn-action"
+                                                            Content="Play"
+                                                            Tag="{Binding Entry}"
+                                                            Click="OnPlayRowClick" />
+                                                    <Button Classes="btn-action"
+                                                            Content="Edit"
+                                                            Tag="{Binding Entry}"
+                                                            Click="OnEditVideoNameClick" />
+                                                    <Button Classes="btn-action"
+                                                            Content="Delete"
+                                                            Tag="{Binding Entry}"
+                                                            Click="OnDeleteRowClick" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Border x:Name="EmptyVideosPanel"
+                                    Background="#fafbfc"
+                                    IsVisible="False"
+                                    IsHitTestVisible="False"
+                                    MinHeight="160">
+                                <StackPanel VerticalAlignment="Center"
+                                            HorizontalAlignment="Center"
+                                            Spacing="8"
+                                            Margin="24">
+                                    <Border Width="56"
+                                            Height="56"
+                                            CornerRadius="28"
+                                            Background="#e0f2fe"
+                                            HorizontalAlignment="Center">
+                                        <TextBlock Text="MP4"
+                                                   FontSize="14"
+                                                   FontWeight="Bold"
+                                                   Foreground="#1d4ed8"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock Text="No videos yet"
+                                               FontSize="15"
+                                               FontWeight="SemiBold"
+                                               Foreground="#475569"
+                                               HorizontalAlignment="Center" />
+                                    <TextBlock Text="Click Add New Video to import MP4 files."
+                                               FontSize="12"
+                                               Foreground="#94a3b8"
+                                               HorizontalAlignment="Center"
+                                               TextAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </DockPanel>
+    </Border>
+</Window>

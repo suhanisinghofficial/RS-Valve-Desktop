@@ -1,0 +1,240 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="RSValve.Desktop.MainWindow"
+        Title="RS VALVE APPLICATION"
+        Width="440"
+        Height="480"
+        MinWidth="400"
+        MinHeight="440"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="True"
+        RequestedThemeVariant="Light"
+        Background="{StaticResource PageBgBrush}">
+    <Border Margin="16,14,16,14"
+            Background="{StaticResource CardBrush}"
+            CornerRadius="16"
+            Padding="0"
+            BoxShadow="0 8 24 0 #1a000000"
+            ClipToBounds="True">
+        <DockPanel LastChildFill="True">
+            <Border DockPanel.Dock="Top"
+                    Background="{StaticResource HeaderGradientBrush}"
+                    CornerRadius="16,16,0,0"
+                    Padding="16,16">
+                <Grid ColumnDefinitions="Auto,*"
+                      RowDefinitions="Auto,Auto"
+                      VerticalAlignment="Center">
+                    <Border Grid.Row="0"
+                            Grid.RowSpan="2"
+                            Grid.Column="0"
+                            Width="56"
+                            Height="56"
+                            CornerRadius="12"
+                            Background="#ffffff"
+                            Margin="0,0,14,0"
+                            VerticalAlignment="Center">
+                        <Image Source="/Assets/logo.png"
+                               Stretch="Uniform"
+                               Margin="6" />
+                    </Border>
+                    <TextBlock Grid.Row="0"
+                               Grid.Column="1"
+                               Text="RS VALVE APPLICATION"
+                               FontSize="16"
+                               FontWeight="Bold"
+                               Foreground="White"
+                               TextWrapping="Wrap"
+                               VerticalAlignment="Center" />
+                    <Border Grid.Row="1"
+                            Grid.Column="1"
+                            HorizontalAlignment="Left"
+                            CornerRadius="8"
+                            Padding="10,4"
+                            Margin="0,6,0,0"
+                            BorderBrush="#38bdf8"
+                            BorderThickness="1">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                <GradientStop Offset="0" Color="#0ea5e9" />
+                                <GradientStop Offset="1" Color="#0284c7" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <TextBlock x:Name="VersionBlock"
+                                   FontSize="10"
+                                   FontWeight="Bold"
+                                   Foreground="#ffffff" />
+                    </Border>
+                </Grid>
+            </Border>
+
+            <Border DockPanel.Dock="Bottom"
+                    Background="#f8fafc"
+                    BorderBrush="#e2e8f0"
+                    BorderThickness="0,1,0,0"
+                    CornerRadius="0,0,16,16"
+                    Padding="16,10">
+                <TextBlock x:Name="CopyrightBlock"
+                           HorizontalAlignment="Center"
+                           FontSize="10"
+                           Foreground="#94a3b8"
+                           TextAlignment="Center" />
+            </Border>
+
+            <StackPanel DockPanel.Dock="Bottom"
+                        Spacing="8"
+                        Margin="16,0,16,12">
+                <Button x:Name="ModifyEntryButton"
+                        Classes="accent"
+                        Content="Manage videos"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        Padding="0,10"
+                        Click="OnOpenVideosWindow" />
+                <Button x:Name="SettingsEntryButton"
+                        Classes="outline"
+                        Content="Settings"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        Click="OnOpenSettingsWindow" />
+            </StackPanel>
+
+            <StackPanel Margin="16,16,16,8"
+                        Spacing="12">
+                <TextBlock Text="Dashboard"
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource InkMutedBrush}" />
+
+                <Border x:Name="UpdateAvailableBorder"
+                        Background="#eff6ff"
+                        BorderBrush="#93c5fd"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        Padding="12,10"
+                        IsVisible="False">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Update available"
+                                   FontWeight="Bold"
+                                   FontSize="13"
+                                   Foreground="#1e40af" />
+                        <TextBlock x:Name="UpdateMessageBlock"
+                                   TextWrapping="Wrap"
+                                   FontSize="12"
+                                   Foreground="#1d4ed8"
+                                   LineHeight="16" />
+                        <Button x:Name="DownloadUpdateButton"
+                                Classes="accent"
+                                Content="Download update"
+                                HorizontalAlignment="Left"
+                                Padding="14,8"
+                                Click="OnDownloadUpdateClick" />
+                    </StackPanel>
+                </Border>
+
+                <Grid ColumnDefinitions="*,12,*">
+                    <Border Grid.Column="0"
+                            Background="#f8fafc"
+                            CornerRadius="12"
+                            Padding="14,14"
+                            BorderBrush="#e2e8f0"
+                            BorderThickness="1">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <Border Grid.Column="0"
+                                    Width="40"
+                                    Height="40"
+                                    CornerRadius="20"
+                                    Background="#dbeafe"
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,12,0">
+                                <TextBlock Text="◉"
+                                           FontSize="16"
+                                           Foreground="#2563eb"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        Spacing="4">
+                                <TextBlock Text="Connection"
+                                           FontSize="11"
+                                           Foreground="{StaticResource InkMutedBrush}" />
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="8">
+                                    <Ellipse x:Name="StatusDot"
+                                             Width="10"
+                                             Height="10"
+                                             VerticalAlignment="Center"
+                                             Fill="#94a3b8" />
+                                    <TextBlock x:Name="StatusBlock"
+                                               FontSize="16"
+                                               FontWeight="Bold"
+                                               Foreground="{StaticResource InkBrush}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <Border Grid.Column="2"
+                            Background="#f8fafc"
+                            CornerRadius="12"
+                            Padding="14,14"
+                            BorderBrush="#e2e8f0"
+                            BorderThickness="1">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <Border Grid.Column="0"
+                                    Width="40"
+                                    Height="40"
+                                    CornerRadius="20"
+                                    Background="#d1fae5"
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,12,0">
+                                <TextBlock Text="▶"
+                                           FontSize="14"
+                                           Foreground="#059669"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        Spacing="4">
+                                <TextBlock Text="Videos"
+                                           FontSize="11"
+                                           Foreground="{StaticResource InkMutedBrush}" />
+                                <TextBlock x:Name="TotalVideosBlock"
+                                           FontSize="22"
+                                           FontWeight="Bold"
+                                           Foreground="#047857" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <Border x:Name="StartupErrorBorder"
+                        Background="#fef2f2"
+                        BorderBrush="#fecaca"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        Padding="12,10"
+                        IsVisible="False">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Connection issue"
+                                   FontWeight="SemiBold"
+                                   FontSize="12"
+                                   Foreground="#991b1b" />
+                        <TextBlock x:Name="StartupErrorBlock"
+                                   Foreground="#b91c1c"
+                                   TextWrapping="Wrap"
+                                   FontSize="11"
+                                   LineHeight="16" />
+                        <Button x:Name="RetryConnectionButton"
+                                Classes="link"
+                                Content="Retry connection"
+                                HorizontalAlignment="Left"
+                                IsVisible="False"
+                                Click="OnRetryConnectionClick" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </DockPanel>
+    </Border>
+</Window>

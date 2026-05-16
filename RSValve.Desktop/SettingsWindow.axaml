@@ -1,0 +1,128 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="RSValve.Desktop.SettingsWindow"
+        Title="Settings"
+        Width="420"
+        Height="460"
+        MinWidth="380"
+        MinHeight="400"
+        SizeToContent="Manual"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        CanResize="False"
+        RequestedThemeVariant="Light"
+        Background="{StaticResource PageBgBrush}">
+    <Border Margin="12"
+            Background="{StaticResource CardBrush}"
+            CornerRadius="14"
+            BoxShadow="0 12 32 0 #22000000"
+            ClipToBounds="True">
+        <DockPanel LastChildFill="True">
+            <Border DockPanel.Dock="Top"
+                    Background="{StaticResource PopupHeaderGradientBrush}"
+                    Padding="18,14">
+                <Grid ColumnDefinitions="Auto,*">
+                    <Border Grid.Column="0"
+                            Classes="header-icon"
+                            Margin="0,0,14,0"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="SET"
+                                   FontSize="13"
+                                   Foreground="#1d4ed8"
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Spacing="2">
+                        <TextBlock Text="Settings"
+                                   FontSize="18"
+                                   FontWeight="Bold"
+                                   Foreground="White" />
+                        <TextBlock Text="Connect this app to your lobby server"
+                                   FontSize="12"
+                                   Foreground="#bfdbfe"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border DockPanel.Dock="Bottom"
+                    Background="#f8fafc"
+                    BorderBrush="#e2e8f0"
+                    BorderThickness="0,1,0,0"
+                    Padding="14,12"
+                    CornerRadius="0,0,14,14">
+                <Grid ColumnDefinitions="*,12,*">
+                    <Button Grid.Column="0"
+                            Classes="outline"
+                            Content="Cancel"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
+                            Click="OnCloseClick" />
+                    <Button Grid.Column="2"
+                            x:Name="SaveSettingsButton"
+                            Classes="accent"
+                            Content="Save &amp; connect"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
+                            Click="OnSaveClick" />
+                </Grid>
+            </Border>
+
+            <ScrollViewer Margin="16,14,16,8"
+                          VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="14">
+                    <Border Background="#f8fafc"
+                            BorderBrush="#e2e8f0"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="14">
+                        <StackPanel Spacing="12">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Main URL"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource InkMutedBrush}" />
+                                <TextBox x:Name="MainUrlBox"
+                                         Classes="field"
+                                         Watermark="https://rsvalve.tractioncontrolsbc.com" />
+                            </StackPanel>
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Lobby"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource InkMutedBrush}" />
+                                <TextBox x:Name="LobbyBox"
+                                         Classes="field"
+                                         Watermark="SBC" />
+                            </StackPanel>
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Token"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource InkMutedBrush}" />
+                                <TextBox x:Name="TokenBox"
+                                         Classes="field"
+                                         PasswordChar="•"
+                                         RevealPassword="False"
+                                         Watermark="Enter lobby token" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="SettingsMessageBorder"
+                            CornerRadius="10"
+                            Padding="12,10"
+                            IsVisible="False">
+                        <TextBlock x:Name="SettingsMessageBlock"
+                                   TextWrapping="Wrap"
+                                   FontSize="12"
+                                   LineHeight="16" />
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
+    </Border>
+</Window>
