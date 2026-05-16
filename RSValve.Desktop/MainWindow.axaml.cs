@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Threading;
 using RSValve.Desktop.Models;
 using RSValve.Desktop.Services;
 
@@ -10,6 +11,10 @@ namespace RSValve.Desktop;
 public partial class MainWindow : Window
 {
     private string? _updateDownloadUrl;
+    private string? _updateRemoteVersion;
+    private string? _downloadedInstallerPath;
+    private CancellationTokenSource? _updateDownloadCts;
+    private readonly UpdateDownloadService _updateDownloader = new();
     private VideosWindow? _videosWindow;
 
     public MainWindow()
@@ -17,11 +22,12 @@ public partial class MainWindow : Window
         InitializeComponent();
         WindowIconHelper.Apply(this);
         Loaded += OnLoaded;
+        Closing += (_, _) => _updateDownloadCts?.Cancel();
     }
 
     private async void OnLoaded(object? sender, RoutedEventArgs e)
     {
-        VersionBlock.Text = $"v{AppVersionInfo.Current}";
+        VersionBlock.Text = $"v{AppVersionInfo.Display}";
         CopyrightBlock.Text = $"All rights reserved © {DateTime.Now.Year}";
 
         SetConnectionStatus("Starting…", AppColors.StatusStarting, showError: false);
@@ -131,19 +137,124 @@ public partial class MainWindow : Window
         if (result.UpdateAvailable)
         {
             _updateDownloadUrl = result.DownloadUrl;
+            _updateRemoteVersion = result.RemoteVersion;
+            _downloadedInstallerPath = null;
+            ResetUpdateDownloadUi();
             UpdateMessageBlock.Text =
-                $"Version {result.RemoteVersion} is available. You are on v{AppVersionInfo.Current}.";
+                $"Version {result.RemoteVersion} is available. You are on v{AppVersionInfo.Display}.";
             UpdateAvailableBorder.IsVisible = true;
             return;
         }
 
         _updateDownloadUrl = null;
+        _updateRemoteVersion = null;
         UpdateAvailableBorder.IsVisible = false;
     }
 
-    private void OnDownloadUpdateClick(object? sender, RoutedEventArgs e)
+    private void ResetUpdateDownloadUi()
     {
-        if (!string.IsNullOrEmpty(_updateDownloadUrl))
-            VideoPlaybackService.TryOpenUrl(_updateDownloadUrl);
+        UpdateProgressBar.IsVisible = false;
+        UpdateProgressBar.Value = 0;
+        UpdateDownloadStatusBlock.IsVisible = false;
+        UpdateDownloadStatusBlock.Text = "";
+        DownloadUpdateButton.IsEnabled = true;
+        DownloadUpdateButton.Content = "Download update";
+        RunInstallerButton.IsVisible = false;
+        ShowInstallerButton.IsVisible = false;
+
+        if (OperatingSystem.IsWindows())
+            RunInstallerButton.Content = "Run installer";
+        else
+            RunInstallerButton.Content = "Show in folder";
+    }
+
+    private async void OnDownloadUpdateClick(object? sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(_updateDownloadUrl) || string.IsNullOrEmpty(_updateRemoteVersion))
+            return;
+
+        if (!string.IsNullOrEmpty(_downloadedInstallerPath) && File.Exists(_downloadedInstallerPath))
+        {
+            OnRunInstallerClick(sender, e);
+            return;
+        }
+
+        _updateDownloadCts?.Cancel();
+        _updateDownloadCts = new CancellationTokenSource();
+        var ct = _updateDownloadCts.Token;
+
+        DownloadUpdateButton.IsEnabled = false;
+        RunInstallerButton.IsVisible = false;
+        ShowInstallerButton.IsVisible = false;
+        UpdateProgressBar.IsVisible = true;
+        UpdateProgressBar.Value = 0;
+        UpdateDownloadStatusBlock.IsVisible = true;
+        UpdateDownloadStatusBlock.Text = "Starting download…";
+
+        var progress = new Progress<UpdateDownloadProgress>(p =>
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (p.Percent is int percent)
+                {
+                    UpdateProgressBar.Value = percent;
+                    UpdateDownloadStatusBlock.Text = $"Downloading… {percent}%";
+                }
+                else
+                {
+                    var mb = p.BytesReceived / (1024.0 * 1024.0);
+                    UpdateDownloadStatusBlock.Text = $"Downloading… {mb:0.0} MB";
+                }
+            });
+        });
+
+        var result = await _updateDownloader.DownloadAsync(
+            _updateDownloadUrl,
+            _updateRemoteVersion,
+            progress,
+            ct);
+
+        if (ct.IsCancellationRequested)
+            return;
+
+        if (!result.Success || string.IsNullOrEmpty(result.FilePath))
+        {
+            DownloadUpdateButton.IsEnabled = true;
+            UpdateProgressBar.IsVisible = false;
+            UpdateDownloadStatusBlock.Text = result.ErrorMessage ?? "Download failed.";
+            return;
+        }
+
+        _downloadedInstallerPath = result.FilePath;
+        UpdateProgressBar.Value = 100;
+        UpdateDownloadStatusBlock.Text = $"Saved to {result.FilePath}";
+        DownloadUpdateButton.IsEnabled = true;
+        DownloadUpdateButton.Content = "Download again";
+        RunInstallerButton.IsVisible = true;
+        ShowInstallerButton.IsVisible = true;
+
+        if (!OperatingSystem.IsWindows())
+            UpdateDownloadStatusBlock.Text +=
+                $"{Environment.NewLine}Install on Windows using this file.";
+    }
+
+    private void OnRunInstallerClick(object? sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(_downloadedInstallerPath))
+            return;
+
+        if (!UpdateDownloadService.TryRunInstaller(_downloadedInstallerPath))
+        {
+            UpdateDownloadStatusBlock.IsVisible = true;
+            UpdateDownloadStatusBlock.Text = "Could not start the installer.";
+        }
+    }
+
+    private void OnShowInstallerClick(object? sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(_downloadedInstallerPath))
+            return;
+
+        UpdateDownloadService.TryRevealInFileManager(_downloadedInstallerPath);
     }
 }

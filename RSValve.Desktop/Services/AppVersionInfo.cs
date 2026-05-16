@@ -15,6 +15,18 @@ public static class AppVersionInfo
         }
     }
 
+    /// <summary>Short version for UI (e.g. 1.0.0), without git commit suffix.</summary>
+    public static string Display
+    {
+        get
+        {
+            var text = Current.Trim();
+            var plus = text.IndexOf('+');
+            if (plus > 0) text = text[..plus];
+            return NormalizeTag(text);
+        }
+    }
+
     public static string NormalizeTag(string tag)
     {
         var cleaned = tag.Trim();
@@ -25,7 +37,7 @@ public static class AppVersionInfo
 
     public static bool IsRemoteNewer(string remoteVersion, string? currentVersion = null)
     {
-        currentVersion ??= Current;
+        currentVersion ??= Display;
         if (!TryParseVersion(remoteVersion, out var remote))
             return false;
         if (!TryParseVersion(currentVersion, out var current))

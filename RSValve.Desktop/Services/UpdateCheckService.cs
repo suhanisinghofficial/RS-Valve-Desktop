@@ -65,7 +65,7 @@ public sealed class UpdateCheckService
     {
         var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
         client.DefaultRequestHeaders.UserAgent.Add(
-            new ProductInfoHeaderValue("RS-Valve-Desktop", AppVersionInfo.Current));
+            new ProductInfoHeaderValue("RS-Valve-Desktop", AppVersionInfo.Display));
         client.DefaultRequestHeaders.Accept.Add(
             new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
         return client;
