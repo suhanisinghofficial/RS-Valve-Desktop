@@ -47,15 +47,15 @@ jobs:
         shell: pwsh
         run: |
           $dir = "${{ env.PUBLISH_APP_DIR }}"
-          $src = "$dir\RSValve.exe"
-          $dst = "$dir\RS-Valve.exe"
+          $src = Join-Path $dir "RSValve.exe"
+          $dst = Join-Path $dir "RS-Valve.exe"
           if (-not (Test-Path $src)) {
             Write-Host "Files in $dir :"
             Get-ChildItem $dir -Filter *.exe | Format-Table Name, Length
             throw "RSValve.exe not found after publish"
           }
           if (Test-Path $dst) { Remove-Item $dst -Force }
-          Rename-Item $src $dst
+          Rename-Item -Path $src -NewName "RS-Valve.exe"
           Write-Host "OK: $dst"
 
       - name: Install Inno Setup
