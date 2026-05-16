@@ -1,6 +1,5 @@
 ; Inno Setup — RS VALVE desktop app (Windows x64)
-; Compiled locally:  ISCC.exe installer\installer.iss
-; CI:               GitHub Actions (see .github/workflows/build.yml)
+; CI: publish\app\  →  installer output: publish\RS-Valve-Setup.exe
 
 #ifndef AppVersion
   #define AppVersion "1.0.0"
@@ -9,7 +8,8 @@
 #define AppName "RS VALVE APPLICATION"
 #define AppShortName "RS Valve"
 #define AppExe "RS-Valve.exe"
-#define PublishDir "..\publish"
+#define SourceDir "..\publish\app"
+#define OutputDir "..\publish"
 
 [Setup]
 AppId={{A7B3C9E1-RSVALVE-DESKTOP-2026}}
@@ -19,7 +19,7 @@ AppVerName={#AppName} {#AppVersion}
 AppPublisher=RS VALVE APPLICATION
 DefaultDirName={autopf}\{#AppShortName}
 DefaultGroupName={#AppShortName}
-OutputDir=..\publish
+OutputDir={#OutputDir}
 OutputBaseFilename=RS-Valve-Setup
 Compression=lzma2
 SolidCompression=yes
@@ -27,26 +27,21 @@ ArchitecturesInstallIn64BitMode=x64
 PrivilegesRequired=admin
 WizardStyle=modern
 UninstallDisplayName={#AppName}
-UninstallDisplayIcon={app}\{#AppExe}
 DisableProgramGroupPage=no
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Additional shortcuts:"; Flags: unchecked
 
 [Files]
-; Entire publish output (exe + all .NET / Avalonia dependencies)
-Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"
-Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
+Name: "{group}\Uninstall {#AppName}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent
-
-[UninstallDelete]
-Type: filesandordirs; Name: "{app}"
+Filename: "{app}\{#AppExe}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent

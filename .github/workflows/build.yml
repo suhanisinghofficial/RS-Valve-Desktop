@@ -6,9 +6,10 @@ on:
   workflow_dispatch:
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   DOTNET_VERSION: '8.0.x'
   RUNTIME: win-x64
-  PUBLISH_DIR: publish
+  PUBLISH_APP_DIR: publish/app
   PROJECT: RSValve.Desktop/RSValve.Desktop.csproj
 
 jobs:
@@ -30,56 +31,64 @@ jobs:
         id: version
         shell: pwsh
         run: |
-          $match = Select-String -Path Directory.Build.props -Pattern '<Version>([^<]+)</Version>' | Select-Object -First 1
-          if (-not $match) { throw 'Could not read Version from Directory.Build.props' }
-          $version = $match.Matches.Groups[1].Value.Trim()
+          $line = Get-Content Directory.Build.props | Where-Object { $_ -match '^\s*<Version>' } | Select-Object -First 1
+          if (-not $line) { throw 'Version not found in Directory.Build.props' }
+          $version = ($line -replace '.*<Version>([^<]+)</Version>.*', '$1').Trim()
           "version=$version" >> $env:GITHUB_OUTPUT
           Write-Host "Building version $version"
 
       - name: Restore
         run: dotnet restore ${{ env.PROJECT }}
 
-      - name: Publish
-        run: dotnet publish ${{ env.PROJECT }} -c Release -r ${{ env.RUNTIME }} --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false -o ${{ env.PUBLISH_DIR }}
+      - name: Publish app
+        run: dotnet publish ${{ env.PROJECT }} -c Release -r ${{ env.RUNTIME }} --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false -o ${{ env.PUBLISH_APP_DIR }}
 
       - name: Rename to RS-Valve.exe
         shell: pwsh
         run: |
-          $src = "${{ env.PUBLISH_DIR }}\RSValve.exe"
-          $dst = "${{ env.PUBLISH_DIR }}\RS-Valve.exe"
+          $dir = "${{ env.PUBLISH_APP_DIR }}"
+          $src = "$dir\RSValve.exe"
+          $dst = "$dir\RS-Valve.exe"
           if (-not (Test-Path $src)) {
-            Get-ChildItem "${{ env.PUBLISH_DIR }}" -Filter *.exe
+            Write-Host "Files in $dir :"
+            Get-ChildItem $dir -Filter *.exe | Format-Table Name, Length
             throw "RSValve.exe not found after publish"
           }
           if (Test-Path $dst) { Remove-Item $dst -Force }
           Rename-Item $src $dst
-          Write-Host "Created $dst"
+          Write-Host "OK: $dst"
 
       - name: Install Inno Setup
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           choco install innosetup -y --no-progress
+          if ($LASTEXITCODE -ge 2) { throw "choco install failed with $LASTEXITCODE" }
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { $iscc = "$env:ProgramFiles\Inno Setup 6\ISCC.exe" }
           if (-not (Test-Path $iscc)) { throw "ISCC.exe not found" }
-          "INNO_ISCC=$iscc" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          Write-Host "Inno Setup: $iscc"
+          "INNO_ISCC=$iscc" >> $env:GITHUB_ENV
+          Write-Host "Using $iscc"
 
       - name: Compile installer
         shell: pwsh
         run: |
-          & $env:INNO_ISCC "$PWD\installer\installer.iss" /DAppVersion="${{ steps.version.outputs.version }}"
-          if ($LASTEXITCODE -ne 0) { throw "ISCC failed with exit code $LASTEXITCODE" }
+          $ErrorActionPreference = 'Stop'
+          $iss = Join-Path $env:GITHUB_WORKSPACE "installer\installer.iss"
+          Write-Host "Compiling $iss"
+          & "$env:INNO_ISCC" $iss /DAppVersion="${{ steps.version.outputs.version }}"
+          if ($LASTEXITCODE -ne 0) { throw "ISCC exit code $LASTEXITCODE" }
 
       - name: Verify installer
         shell: pwsh
         run: |
-          $setup = "$PWD\publish\RS-Valve-Setup.exe"
+          $setup = Join-Path $env:GITHUB_WORKSPACE "publish\RS-Valve-Setup.exe"
           if (-not (Test-Path $setup)) {
-            Get-ChildItem publish
-            throw "RS-Valve-Setup.exe was not created"
+            Write-Host "Contents of publish:"
+            Get-ChildItem publish -Recurse | Select-Object FullName, Length
+            throw "RS-Valve-Setup.exe not found"
           }
-          Write-Host "Installer size: $((Get-Item $setup).Length) bytes"
+          Write-Host "Installer OK: $((Get-Item $setup).Length) bytes"
 
       - name: Upload RS-Valve-Setup.exe
         uses: actions/upload-artifact@v4
@@ -91,6 +100,6 @@ jobs:
       - name: Upload app folder
         uses: actions/upload-artifact@v4
         with:
-          name: RS-Valve-win-x64-v${{ steps.version.outputs.version }}
-          path: publish/
+          name: RS-Valve-app-v${{ steps.version.outputs.version }}
+          path: publish/app/
           retention-days: 14

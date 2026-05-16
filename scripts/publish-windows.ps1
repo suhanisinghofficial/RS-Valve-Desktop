@@ -3,7 +3,7 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
 
-$Out = Join-Path $Root "publish"
+$Out = Join-Path $Root "publish/app"
 Write-Host "Publishing Windows x64 (self-contained folder)..." -ForegroundColor Cyan
 
 dotnet publish RSValve.Desktop/RSValve.Desktop.csproj `
@@ -17,4 +17,4 @@ dotnet publish RSValve.Desktop/RSValve.Desktop.csproj `
 Write-Host ""
 Write-Host "App:    $Out\RS-Valve.exe" -ForegroundColor Green
 Write-Host "Folder: Copy entire 'publish' folder to the PC." -ForegroundColor Yellow
-Write-Host "Installer (Windows + Inno Setup): ISCC.exe installer\installer.iss" -ForegroundColor Yellow
+Write-Host "Installer: ISCC.exe installer\installer.iss  ->  publish\RS-Valve-Setup.exe" -ForegroundColor Yellow
