@@ -1,5 +1,8 @@
 using System.Diagnostics;
 using System.Net.Http.Headers;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Threading;
 
 namespace RSValve.Desktop.Services;
 
@@ -17,7 +20,11 @@ public readonly record struct UpdateDownloadResult(bool Success, string? FilePat
 
 public sealed class UpdateDownloadService
 {
+    private const string InnoSilentArgs = "/VERYSILENT /SUPPRESSMSGBOXES /CLOSEAPPLICATIONS /FORCECLOSEAPPLICATIONS";
+
     private static readonly HttpClient Http = CreateClient();
+
+    public static bool CanAutoInstall => OperatingSystem.IsWindows();
 
     public async Task<UpdateDownloadResult> DownloadAsync(
         string downloadUrl,
@@ -72,17 +79,27 @@ public sealed class UpdateDownloadService
         }
     }
 
-    public static bool TryRunInstaller(string installerPath)
+    public static bool TryStartSilentInstallAndExit(string installerPath)
     {
-        if (!File.Exists(installerPath))
+        if (!CanAutoInstall || !File.Exists(installerPath))
             return false;
-
-        if (!OperatingSystem.IsWindows())
-            return TryRevealInFileManager(installerPath);
 
         try
         {
-            Process.Start(new ProcessStartInfo(installerPath) { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(installerPath)
+            {
+                UseShellExecute = true,
+                Arguments = InnoSilentArgs
+            });
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                    desktop.Shutdown();
+                else
+                    Environment.Exit(0);
+            }, DispatcherPriority.Background);
+
             return true;
         }
         catch

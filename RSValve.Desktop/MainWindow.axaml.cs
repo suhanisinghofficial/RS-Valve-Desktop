@@ -158,14 +158,7 @@ public partial class MainWindow : Window
         UpdateDownloadStatusBlock.IsVisible = false;
         UpdateDownloadStatusBlock.Text = "";
         DownloadUpdateButton.IsEnabled = true;
-        DownloadUpdateButton.Content = "Download update";
-        RunInstallerButton.IsVisible = false;
-        ShowInstallerButton.IsVisible = false;
-
-        if (OperatingSystem.IsWindows())
-            RunInstallerButton.Content = "Run installer";
-        else
-            RunInstallerButton.Content = "Show in folder";
+        DownloadUpdateButton.Content = UpdateDownloadService.CanAutoInstall ? "Update now" : "Download update";
     }
 
     private async void OnDownloadUpdateClick(object? sender, RoutedEventArgs e)
@@ -175,7 +168,13 @@ public partial class MainWindow : Window
 
         if (!string.IsNullOrEmpty(_downloadedInstallerPath) && File.Exists(_downloadedInstallerPath))
         {
-            OnRunInstallerClick(sender, e);
+            if (UpdateDownloadService.CanAutoInstall)
+            {
+                BeginSilentInstall(_downloadedInstallerPath);
+                return;
+            }
+
+            UpdateDownloadService.TryRevealInFileManager(_downloadedInstallerPath);
             return;
         }
 
@@ -184,12 +183,10 @@ public partial class MainWindow : Window
         var ct = _updateDownloadCts.Token;
 
         DownloadUpdateButton.IsEnabled = false;
-        RunInstallerButton.IsVisible = false;
-        ShowInstallerButton.IsVisible = false;
         UpdateProgressBar.IsVisible = true;
         UpdateProgressBar.Value = 0;
         UpdateDownloadStatusBlock.IsVisible = true;
-        UpdateDownloadStatusBlock.Text = "Starting download…";
+        UpdateDownloadStatusBlock.Text = "Downloading update…";
 
         var progress = new Progress<UpdateDownloadProgress>(p =>
         {
@@ -226,35 +223,31 @@ public partial class MainWindow : Window
         }
 
         _downloadedInstallerPath = result.FilePath;
-        UpdateProgressBar.Value = 100;
-        UpdateDownloadStatusBlock.Text = $"Saved to {result.FilePath}";
-        DownloadUpdateButton.IsEnabled = true;
-        DownloadUpdateButton.Content = "Download again";
-        RunInstallerButton.IsVisible = true;
-        ShowInstallerButton.IsVisible = true;
 
-        if (!OperatingSystem.IsWindows())
-            UpdateDownloadStatusBlock.Text +=
-                $"{Environment.NewLine}Install on Windows using this file.";
-    }
-
-    private void OnRunInstallerClick(object? sender, RoutedEventArgs e)
-    {
-        if (string.IsNullOrEmpty(_downloadedInstallerPath))
-            return;
-
-        if (!UpdateDownloadService.TryRunInstaller(_downloadedInstallerPath))
+        if (UpdateDownloadService.CanAutoInstall)
         {
-            UpdateDownloadStatusBlock.IsVisible = true;
-            UpdateDownloadStatusBlock.Text = "Could not start the installer.";
+            BeginSilentInstall(result.FilePath);
+            return;
         }
+
+        UpdateProgressBar.IsVisible = false;
+        UpdateDownloadStatusBlock.Text =
+            $"Update saved to:{Environment.NewLine}{result.FilePath}{Environment.NewLine}Install this file on Windows.";
+        DownloadUpdateButton.IsEnabled = true;
+        DownloadUpdateButton.Content = "Show in folder";
     }
 
-    private void OnShowInstallerClick(object? sender, RoutedEventArgs e)
+    private void BeginSilentInstall(string installerPath)
     {
-        if (string.IsNullOrEmpty(_downloadedInstallerPath))
+        DownloadUpdateButton.IsEnabled = false;
+        UpdateProgressBar.IsVisible = false;
+        UpdateDownloadStatusBlock.IsVisible = true;
+        UpdateDownloadStatusBlock.Text = "Installing update… The app will close and restart.";
+
+        if (UpdateDownloadService.TryStartSilentInstallAndExit(installerPath))
             return;
 
-        UpdateDownloadService.TryRevealInFileManager(_downloadedInstallerPath);
+        DownloadUpdateButton.IsEnabled = true;
+        UpdateDownloadStatusBlock.Text = "Could not start the installer.";
     }
 }

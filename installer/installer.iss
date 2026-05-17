@@ -27,6 +27,8 @@ PrivilegesRequired=admin
 WizardStyle=modern
 UninstallDisplayName={#AppName}
 DisableProgramGroupPage=no
+CloseApplications=force
+RestartApplications=yes
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -42,5 +44,12 @@ Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"; IconFilename: "{#AppIco
 Name: "{group}\Uninstall {#AppName}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; IconFilename: "{#AppIcon}"; Tasks: desktopicon
 
+[Code]
+function ShouldLaunchAfterSilentUpdate: Boolean;
+begin
+  Result := WizardSilent;
+end;
+
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#AppExe}"; Flags: nowait postinstall; Check: ShouldLaunchAfterSilentUpdate
